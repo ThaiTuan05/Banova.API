@@ -1,4 +1,5 @@
 using Banova.Api.Entities;
+using Banova.Api.Lib;
 
 namespace Banova.Api.Dtos;
 
@@ -22,7 +23,7 @@ public sealed class ArticleDto
 public sealed class ArticleQuery
 {
     public int Page { get; set; } = 1;
-    public int PageSize { get; set; } = Lib.Constants.DefaultPageSize;
+    public int PageSize { get; set; } = Constants.DefaultPageSize;
     public string? Type { get; set; }
     public string? Q { get; set; }
 }

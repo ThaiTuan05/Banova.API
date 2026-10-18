@@ -51,6 +51,7 @@ builder.Services.AddScoped<IArticleService, ArticleService>();
 builder.Services.AddScoped<IQuizService, QuizService>();
 builder.Services.AddScoped<IContactService, ContactService>();
 builder.Services.AddScoped<INewsletterService, NewsletterService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
 
 // ---------- CORS: FE chạy ở domain Vercel / Vite local ----------
 var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];

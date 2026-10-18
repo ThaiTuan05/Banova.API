@@ -1,0 +1,29 @@
+# ---------- .NET ----------
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.vscode/
+*.DotSettings.user
+
+# ---------- Build / publish ----------
+publish/
+*.publishsettings
+PublishProfiles/
+
+# ---------- Cấu hình cục bộ (KHÔNG commit secret) ----------
+appsettings.Local.json
+appsettings.*.Local.json
+*.env
+.env
+.env.*
+!.env.example
+
+# ---------- Log ----------
+*.log
+logs/
+
+# ---------- OS ----------
+Thumbs.db
+.DS_Store

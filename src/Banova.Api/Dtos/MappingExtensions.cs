@@ -1,5 +1,6 @@
 using Banova.Api.Dtos;
 using Banova.Api.Entities;
+using Banova.Api.Lib;
 
 namespace Banova.Api.Dtos;
 
@@ -76,7 +77,7 @@ public static class MappingExtensions
         ShippingFee = o.ShippingFee,
         TotalAmount = o.TotalAmount,
         Status = o.Status,
-        StatusLabel = Lib.Constants.OrderStatusLabel(o.Status),
+        StatusLabel = Constants.OrderStatusLabel(o.Status),
         PaymentMethod = o.PaymentMethod,
         Items = o.Items.Select(i => i.ToDto()).ToList(),
         CreatedAt = o.CreatedAt

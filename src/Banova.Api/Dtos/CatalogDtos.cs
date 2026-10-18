@@ -1,4 +1,5 @@
 using Banova.Api.Entities;
+using Banova.Api.Lib;
 
 namespace Banova.Api.Dtos;
 
@@ -38,7 +39,7 @@ public sealed class ProductDto
 public sealed class ProductQuery
 {
     public int Page { get; set; } = 1;
-    public int PageSize { get; set; } = Lib.Constants.DefaultPageSize;
+    public int PageSize { get; set; } = Constants.DefaultPageSize;
     public string? Category { get; set; }
     public string? Q { get; set; }
     public string? Sort { get; set; }

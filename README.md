@@ -45,6 +45,59 @@ dotnet ef database update --project src\Banova.Api\Banova.Api.csproj
 dotnet ef migrations list --project src\Banova.Api\Banova.Api.csproj
 ```
 
+### Kiểm thử API
+
+**Cách 1 — Giao diện Scalar (bấm tay, trực quan)**
+
+1. Chạy server: `dotnet run --project src\Banova.Api --urls http://localhost:5252`
+2. Mở **http://localhost:5252/scalar/v1**
+3. Chọn endpoint → **Test** → dán body JSON → **Send**
+
+Body mẫu để tạo đơn hàng (thay `productId` bằng id thật lấy từ `GET /api/products`):
+
+```json
+{
+  "customerName": "Nguyen Van A",
+  "phone": "0905123456",
+  "email": "a@gmail.com",
+  "address": "123 Le Loi, Quy Nhon",
+  "note": "Giao buoi sang",
+  "paymentMethod": "DEMO",
+  "items": [{ "productId": "<id-lay-tu-GET-products>", "quantity": 2 }]
+}
+```
+
+**Cách 2 — Script tự động (35 ca kiểm thử, ~10 giây)**
+
+```bash
+# Terminal 1: chạy server
+dotnet run --project src\Banova.Api --urls http://localhost:5252
+
+# Terminal 2: chạy test
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-test.ps1
+```
+
+Kết quả mong đợi: `KET QUA: 35/35 PASS - API SAN SANG` (exit code 0).
+
+Script kiểm tra: danh mục · sản phẩm (lọc/sắp/404) · bài viết (SCIENCE/BLOG/references) · quiz (2 định dạng body) ·
+newsletter (201/409/400) · contact (201/400) · **đặt hàng** (mã `BNV-…`, tiền server tính, snapshot giá, trừ kho,
+404/409/400) · CORS preflight.
+
+Test bản đã deploy: `.\scripts\smoke-test.ps1 -BaseUrl "https://your-be.azurewebsites.net"`
+
+### Reset database (khi muốn dữ liệu sạch)
+
+```bash
+dotnet ef database drop -f --project src\Banova.Api\Banova.Api.csproj
+dotnet run --project src\Banova.Api --urls http://localhost:5252
+```
+
+Lần chạy sau sẽ tự `migrate` + `seed` lại từ đầu (1 admin · 4 danh mục · 8 SKU · 5 bài viết).
+
+> ⚠️ **FE hiện tại chưa gọi API** — vẫn đang dùng mock trong component. Muốn test end-to-end (bấm trên web →
+> dữ liệu từ DB) thì Người 1 phải thêm `src/services/api.js` + `VITE_API_BASE_URL` trước. Hiện tại test BE
+> bằng Scalar hoặc script ở trên.
+
 ### Đổi kết nối database
 
 Sửa `src/Banova.Api/appsettings.json` → `ConnectionStrings:Default`.

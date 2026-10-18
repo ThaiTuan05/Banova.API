@@ -52,13 +52,14 @@
    │
 [T7 17/10]  DB + seed + API sản phẩm/bài viết                      ✅
    │
-[CN 18/10]  API quiz/contact/newsletter + hạ tầng chung            ✅
+[CN 18/10]  API quiz/contact/newsletter + ha tang chung            ✅
    │
-[T2 19/10]  Auth admin + CRUD admin + ĐẶT HÀNG END-TO-END          ⬅ ĐANG Ở ĐÂY
+[T2 19/10]  API dat hang (POST/GET) phuc vu CheckoutPage            ✅
+   │        Auth + Admin API                                       ⬜ hoan (FE chua co admin)
    │
-[T3 20/10]  Admin UI (Razor) + dashboard + deploy + tích hợp FE    ⬜
+[T3 20/10]  Deploy + ghep API voi FE + ra soat phap ly             ⬅ DANG O DAY
    │
-[T4 21/10]  Rà soát pháp lý + rehearse demo (không thêm tính năng) ⬜
+[T4 21/10]  Rehearse demo (khong them tinh nang)                    ⬜
 ```
 
 ---
@@ -101,7 +102,12 @@
 - [x] Controllers: `Products`, `Categories`, `Articles`, `Quiz`, `Marketing`
 - [x] **Đã test thật 14 ca** (xem mục 6)
 
-### GIAI ĐOẠN 2 — AUTH + ADMIN API (19/10) ⬜ CHƯA LÀM
+### GIAI ĐOẠN 2 — AUTH + ADMIN API ⬜ HOÃN (FE chưa có trang admin)
+
+> **Quyết định phạm vi:** chỉ làm BE phục vụ những trang FE **đã hoàn thành**.
+> FE hiện có 7 trang (Trang chủ · Sản phẩm · Chi tiết SP · Quiz · Giỏ/Đặt hàng · Khoa học · Chi tiết bài viết)
+> và **chưa có trang Admin** → toàn bộ GĐ2 và 2 endpoint đơn hàng dành cho admin tạm hoãn.
+> Khi FE làm trang admin thì mở lại phần này.
 
 - [ ] **`JwtTokenService`** — ký/kiểm tra JWT bằng `Microsoft.IdentityModel.Tokens`, đọc `Jwt:Secret` từ config
 - [ ] Cấu hình `AddAuthentication().AddJwtBearer()` — **đọc token từ cookie `banova_token`** (không chỉ header)
@@ -120,23 +126,25 @@
   - [ ] `DELETE /api/admin/articles/{id}`
 - [ ] `AdminStatsController` 🔒 — `GET /api/admin/stats` *(Should)*
 
-### GIAI ĐOẠN 3 — ĐẶT HÀNG END-TO-END (19/10) ★ TRỌNG ĐIỂM ⬜ CHƯA LÀM
+### GIAI ĐOẠN 3 — ĐẶT HÀNG MÔ PHỎNG (19/10) ★ TRỌNG ĐIỂM ✅ XONG PHẦN FE CẦN
 
-- [ ] **`OrderService.createOrder`** — trong **1 transaction**:
-  - [ ] Tra giá từ DB cho từng `productId` (KHÔNG nhận giá từ client — NFR-09)
-  - [ ] Sản phẩm không tồn tại → `404 NOT_FOUND`
-  - [ ] Hết hàng (`stock` < số lượng) → `409 CONFLICT`
-  - [ ] Tính `subTotal`, `shippingFee = 0`, `totalAmount`
-  - [ ] Tạo `Order` status `PENDING` + `OrderItem` **snapshot `productName` + `unitPrice`** (NFR-10)
-  - [ ] Sinh `orderCode` dạng **`BNV-yyyyMMdd-XXX`** — đảm bảo UNIQUE, chống trùng khi tạo đồng thời
-  - [ ] Trừ `stock` sản phẩm
-- [ ] `POST /api/orders` — Public (Guest checkout) → `201`
-- [ ] `GET /api/orders/{orderCode}` — Public theo mã đơn → `404` nếu sai
-- [ ] `GET /api/orders` 🔒 — phân trang + lọc `status`
-- [ ] `PATCH /api/orders/{id}/status` 🔒 — validate enum, `400` nếu sai
-- [ ] Body đơn hàng: `{ customerName, phone, email, address, note, paymentMethod, items:[{productId, quantity}] }`
+- [x] **`OrderService.createAsync`** — lưu cả đơn + trừ kho trong **1 `SaveChanges`** (transaction ngầm):
+  - [x] Tra giá từ DB cho từng `productId` (KHÔNG nhận giá từ client — NFR-09)
+  - [x] Gộp dòng trùng sản phẩm trước khi kiểm tra tồn kho
+  - [x] Sản phẩm không tồn tại / ngừng bán → `404 NOT_FOUND` kèm danh sách `productIds`
+  - [x] Hết hàng (`stock` < số lượng) → `409 CONFLICT` kèm `{ productId, name, stock, requested }`
+  - [x] Tính `subTotal`, `shippingFee = 0`, `totalAmount`
+  - [x] Tạo `Order` status `PENDING` + `OrderItem` **snapshot `productName` + `unitPrice`** (NFR-10)
+  - [x] Sinh `orderCode` dạng **`BNV-yyyyMMdd-XXX`** — số thứ tự trong ngày theo **giờ Việt Nam**, dò tới khi không trùng
+  - [x] Trừ `stock` sản phẩm
+  - [x] `paymentMethod` nhận `COD` | `DEMO`, giá trị khác → `400 VALIDATION`
+- [x] `POST /api/orders` — Public (Guest checkout) → `201` trả đầy đủ đơn + `items`
+- [x] `GET /api/orders/{orderCode}` — Public theo mã đơn → `404` nếu sai
+- [x] Thêm `statusLabel` (nhãn tiếng Việt) vào response cho FE hiển thị trực tiếp
+- [ ] `GET /api/orders` 🔒 — **hoãn**: FE chưa có trang admin
+- [ ] `PATCH /api/orders/{id}/status` 🔒 — **hoãn**: FE chưa có trang admin
 
-### GIAI ĐOẠN 4 — TRANG QUẢN TRỊ (Razor Pages) (20/10) ⬜ CHƯA LÀM
+### GIAI ĐOẠN 4 — TRANG QUẢN TRỊ (Razor Pages) ⬜ HOÃN (FE chưa có trang admin)
 
 - [ ] `/Admin/dang-nhap` — form đăng nhập, lưu cookie
 - [ ] Guard: mọi trang `/Admin/*` phải đăng nhập (Razor Pages convention + `[Authorize]`)
@@ -145,7 +153,7 @@
 - [ ] `/Admin/bai-viet` — danh sách + form viết bài + nút **DRAFT / PUBLISH** + ô `references`
 - [ ] `/Admin/don-hang` — danh sách đơn + lọc trạng thái + xem chi tiết + **đổi trạng thái**
 
-### GIAI ĐOẠN 5 — TÍCH HỢP FE + DEPLOY (20/10) ⬜ CHƯA LÀM
+### GIAI ĐOẠN 5 — TÍCH HỢP FE + DEPLOY (20/10) ⬜ CÒN LẠI
 
 - [ ] Bàn giao FE: `VITE_API_BASE_URL`, link Scalar, bảng map field (xem mục 5)
 - [ ] Chạy đủ **6 kịch bản demo** cùng Người 1
@@ -156,7 +164,7 @@
   - [ ] Cập nhật `Cors:AllowedOrigins` = domain FE thật
 - [ ] Warm-up host trước demo (nếu plan free có spin-down)
 
-### GIAI ĐOẠN 6 — RÀ SOÁT PHÁP LÝ & REHEARSE (21/10) ⬜ CHƯA LÀM
+### GIAI ĐOẠN 6 — RÀ SOÁT PHÁP LÝ & REHEARSE (21/10) ⬜ CÒN LẠI
 
 - [ ] Quét toàn bộ dữ liệu seed + nội dung: không còn *"chữa"*, *"điều trị"*, *"thay thuốc"*, *"đặc trị"*
 - [ ] Mọi bài `SCIENCE` bắt buộc có `references` (NFR-03/NFR-09)
@@ -178,23 +186,23 @@
 | 6 | POST | `/api/quiz/submit` | Public | ✅ Xong |
 | 7 | POST | `/api/contact` | Public | ✅ Xong |
 | 8 | POST | `/api/newsletter` | Public | ✅ Xong |
-| 9 | POST | `/api/orders` | Public | ⬜ Chưa |
-| 10 | GET | `/api/orders/{orderCode}` | Public | ⬜ Chưa |
-| 11 | POST | `/api/auth/login` | Public | ⬜ Chưa |
-| 12 | POST | `/api/auth/logout` | Admin | ⬜ Chưa |
-| 13 | GET | `/api/auth/me` | Admin | ⬜ Chưa |
-| 14 | POST | `/api/admin/products` | Admin | ⬜ Chưa |
-| 15 | PUT | `/api/admin/products/{id}` | Admin | ⬜ Chưa |
-| 16 | DELETE | `/api/admin/products/{id}` | Admin | ⬜ Chưa |
-| 17 | POST | `/api/admin/articles` | Admin | ⬜ Chưa |
-| 18 | PUT | `/api/admin/articles/{id}` | Admin | ⬜ Chưa |
-| 19 | DELETE | `/api/admin/articles/{id}` | Admin | ⬜ Chưa |
-| 20 | GET | `/api/orders` | Admin | ⬜ Chưa |
-| 21 | PATCH | `/api/orders/{id}/status` | Admin | ⬜ Chưa |
-| 22 | GET | `/api/admin/stats` | Admin | ⬜ Chưa |
+| 9 | POST | `/api/orders` | Public | ✅ Xong |
+| 10 | GET | `/api/orders/{orderCode}` | Public | ✅ Xong |
+| 11 | POST | `/api/auth/login` | Public | ⬜ Hoãn |
+| 12 | POST | `/api/auth/logout` | Admin | ⬜ Hoãn |
+| 13 | GET | `/api/auth/me` | Admin | ⬜ Hoãn |
+| 14 | POST | `/api/admin/products` | Admin | ⬜ Hoãn |
+| 15 | PUT | `/api/admin/products/{id}` | Admin | ⬜ Hoãn |
+| 16 | DELETE | `/api/admin/products/{id}` | Admin | ⬜ Hoãn |
+| 17 | POST | `/api/admin/articles` | Admin | ⬜ Hoãn |
+| 18 | PUT | `/api/admin/articles/{id}` | Admin | ⬜ Hoãn |
+| 19 | DELETE | `/api/admin/articles/{id}` | Admin | ⬜ Hoãn |
+| 20 | GET | `/api/orders` | Admin | ⬜ Hoãn |
+| 21 | PATCH | `/api/orders/{id}/status` | Admin | ⬜ Hoãn |
+| 22 | GET | `/api/admin/stats` | Admin | ⬜ Hoãn |
 
-> **Ưu tiên nếu trễ tiến độ:** 9 → 11 → 20 → 21 → 14 → 17. Cắt được: 22 (stats) và các trang Admin phụ.
-> **TUYỆT ĐỐI KHÔNG CẮT:** 1, 2, 4, 5, 9, 11, 14, 17, 20, 21.
+> **Trạng thái: 10/10 endpoint phục vụ FE hiện tại đã xong** (1–10). 12 endpoint còn lại đều thuộc khu vực admin — **hoãn vì FE chưa có trang admin**.
+> Việc duy nhất còn lại của BE để demo là **deploy** + **phối hợp ghép API với Người 1**.
 
 ---
 
@@ -262,6 +270,22 @@ VITE_API_BASE_URL=http://localhost:5252/api          # khi dev
 | 14 | CORS preflight từ domain Vercel | ✅ 204 + `Access-Control-Allow-Origin` |
 | 15 | Seeder tự chạy khi khởi động | ✅ 1 admin · 4 danh mục · 8 SKU · 5 bài viết |
 | 16 | `dotnet build` | ✅ 0 warning, 0 error |
+
+### Đợt 2 — Đặt hàng (19/10, nhánh `feat/be-dat-hang`)
+
+| # | Ca kiểm thử | Kết quả |
+|---|---|---|
+| 17 | `POST /api/orders` 2×250g + 1×cookie | ✅ 201, `BNV-20261019-001`, `subTotal = 247000` (server tự tính) |
+| 18 | `POST /api/orders` đơn thứ 2 | ✅ 201, mã tăng thành `BNV-20261019-002` |
+| 19 | Kiểm tra trừ tồn kho | ✅ SP1 từ `120` → `117` (đúng 3 sản phẩm) |
+| 20 | `GET /api/orders/BNV-20261019-001` | ✅ 200, trả đủ `items` + `statusLabel` |
+| 21 | `GET /api/orders/BNV-99999999-999` | ✅ 404 `NOT_FOUND` |
+| 22 | `POST /api/orders` thiếu họ tên + địa chỉ | ✅ 400 `VALIDATION` + `details` theo field |
+| 23 | `POST /api/orders` sản phẩm không tồn tại | ✅ 404 `NOT_FOUND` + `details.productIds` |
+| 24 | `POST /api/orders` vượt tồn kho (hộp quà ×999) | ✅ 409 `CONFLICT` + `{ stock, requested }` |
+| 25 | `POST /api/orders` `paymentMethod = "VNPAY"` | ✅ 400 `VALIDATION` |
+| 26 | `POST /api/orders` `quantity = 0` | ✅ 400 `VALIDATION` |
+| 27 | CORS preflight `OPTIONS /api/orders` | ✅ 204 + `Access-Control-Allow-Origin` |
 
 ---
 

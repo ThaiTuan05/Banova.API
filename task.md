@@ -155,8 +155,8 @@
 
 ### GIAI ĐOẠN 5 — TÍCH HỢP FE + DEPLOY (20/10) ⬜ CÒN LẠI
 
-- [ ] Bàn giao FE: `VITE_API_BASE_URL`, link Scalar, bảng map field (xem mục 5)
-- [ ] Chạy đủ **6 kịch bản demo** cùng Người 1
+- [x] Bàn giao FE: `VITE_API_BASE_URL`, link Scalar, bảng map field → **đã tạo `FE-HANDOVER.md`**
+- [ ] Chạy đủ **6 kịch bản demo** cùng Người 1 *(chờ FE nối API — xem `FE-HANDOVER.md`)*
 - [ ] **Deploy** (⚠️ **Vercel KHÔNG chạy được .NET**):
   - [ ] Chọn host: Azure App Service F1 (free) / MonsterASP.NET (free) / Render (Docker)
   - [ ] SQL Server cloud (hoặc LocalDB nếu demo tại máy)
@@ -166,11 +166,12 @@
 
 ### GIAI ĐOẠN 6 — RÀ SOÁT PHÁP LÝ & REHEARSE (21/10) ⬜ CÒN LẠI
 
-- [ ] Quét toàn bộ dữ liệu seed + nội dung: không còn *"chữa"*, *"điều trị"*, *"thay thuốc"*, *"đặc trị"*
-- [ ] Mọi bài `SCIENCE` bắt buộc có `references` (NFR-03/NFR-09)
-- [ ] `dotnet build` phải **0 warning, 0 error**
-- [ ] Không lộ secret ra log/response
-- [ ] Code freeze — chỉ sửa lỗi nhỏ, không thêm tính năng
+- [x] Quét toàn bộ dữ liệu seed + nội dung: không còn *"chữa"*, *"điều trị"*, *"thay thuốc"*, *"đặc trị"*
+      *(BE sạch — đã grep. FE còn 1 chỗ ở `ArticleDetailPage.jsx`, xem `FE-HANDOVER.md` mục 4)*
+- [x] Mọi bài `SCIENCE` bắt buộc có `references` (NFR-03/NFR-09) — *3/3 bài đã có, smoke test kiểm tra tự động*
+- [x] `dotnet build` phải **0 warning, 0 error** — *đã xác nhận*
+- [x] Không lộ secret ra log/response — *`Jwt:Secret` chỉ nằm trong config, không trả ra API nào*
+- [ ] Code freeze — chỉ sửa lỗi nhỏ, không thêm tính năng *(chốt vào 21/10)*
 
 ---
 

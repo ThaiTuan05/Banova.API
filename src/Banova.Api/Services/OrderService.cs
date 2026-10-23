@@ -12,6 +12,10 @@ public interface IOrderService
 {
     Task<OrderDto> CreateAsync(OrderCreateRequest request, CancellationToken ct = default);
     Task<OrderDto> GetByCodeAsync(string orderCode, CancellationToken ct = default);
+
+    // ---------- Admin (API.md mục 9) ----------
+    Task<(IReadOnlyList<OrderDto> Items, int Total, int Page, int PageSize)> ListAsync(OrderQuery query, CancellationToken ct = default);
+    Task<OrderDto> UpdateStatusAsync(Guid id, string? status, CancellationToken ct = default);
 }
 
 /// <summary>
@@ -171,6 +175,126 @@ public class OrderService : IOrderService
 
         if (order is null)
             throw ApiException.NotFound($"Không tìm thấy đơn hàng '{code}'");
+
+        return order.ToDto();
+    }
+
+    /// <summary>
+    /// Danh sách đơn cho admin (API.md mục 9.1) — lọc theo trạng thái, tìm theo mã đơn / tên / SĐT.
+    /// </summary>
+    public async Task<(IReadOnlyList<OrderDto> Items, int Total, int Page, int PageSize)> ListAsync(
+        OrderQuery query, CancellationToken ct = default)
+    {
+        var page = query.Page < 1 ? 1 : query.Page;
+        var pageSize = query.PageSize < 1 ? Constants.DefaultPageSize : Math.Min(query.PageSize, Constants.MaxPageSize);
+
+        var q = _db.Orders
+            .AsNoTracking()
+            .Include(o => o.Items)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(query.Status) &&
+            Enum.TryParse<OrderStatus>(query.Status.Trim(), ignoreCase: true, out var status))
+        {
+            q = q.Where(o => o.Status == status);
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.Q))
+        {
+            var term = query.Q.Trim();
+            q = q.Where(o => o.OrderCode.Contains(term) || o.CustomerName.Contains(term) || o.Phone.Contains(term));
+        }
+
+        var total = await q.CountAsync(ct);
+        var items = await q
+            .OrderByDescending(o => o.CreatedAt)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(ct);
+
+        return (items.Select(o => o.ToDto()).ToList(), total, page, pageSize);
+    }
+
+    /// <summary>
+    /// Đổi trạng thái đơn (API.md mục 9.2). Huỷ đơn → hoàn tồn kho; mở lại đơn đã huỷ → trừ kho lại.
+    /// </summary>
+    public async Task<OrderDto> UpdateStatusAsync(Guid id, string? status, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(status) ||
+            !Enum.TryParse<OrderStatus>(status.Trim(), ignoreCase: true, out var newStatus) ||
+            !Enum.IsDefined(newStatus))
+        {
+            throw ApiException.Validation("Trạng thái đơn không hợp lệ", new Dictionary<string, string>
+            {
+                ["status"] = "Chỉ nhận PENDING | CONFIRMED | DELIVERING | COMPLETED | CANCELLED"
+            });
+        }
+
+        var order = await _db.Orders
+            .Include(o => o.Items)
+            .FirstOrDefaultAsync(o => o.Id == id, ct)
+            ?? throw ApiException.NotFound("Không tìm thấy đơn hàng");
+
+        if (order.Status == newStatus)
+        {
+            return order.ToDto();
+        }
+
+        var productIds = order.Items.Select(i => i.ProductId).Distinct().ToList();
+        var products = await _db.Products
+            .Where(p => productIds.Contains(p.Id))
+            .ToDictionaryAsync(p => p.Id, ct);
+
+        if (order.Status == OrderStatus.CANCELLED && newStatus != OrderStatus.CANCELLED)
+        {
+            // Mở lại đơn đã huỷ: phải kiểm tra sản phẩm còn bán và còn đủ hàng trước khi trừ kho
+            var unavailable = order.Items
+                .Where(i => !products.TryGetValue(i.ProductId, out var p) || p.DeletedAt != null || !p.IsActive)
+                .Select(i => i.ProductId)
+                .ToList();
+
+            if (unavailable.Count > 0)
+            {
+                throw ApiException.Conflict("Không thể mở lại đơn vì sản phẩm đã ngừng bán", new { productIds = unavailable });
+            }
+
+            var outOfStock = order.Items
+                .Where(i => products[i.ProductId].Stock < i.Quantity)
+                .Select(i => new
+                {
+                    productId = i.ProductId,
+                    name = products[i.ProductId].Name,
+                    stock = products[i.ProductId].Stock,
+                    requested = i.Quantity
+                })
+                .ToList();
+
+            if (outOfStock.Count > 0)
+            {
+                throw ApiException.Conflict("Không thể mở lại đơn vì không đủ tồn kho", outOfStock);
+            }
+
+            foreach (var item in order.Items)
+            {
+                products[item.ProductId].Stock -= item.Quantity;
+            }
+        }
+
+        if (newStatus == OrderStatus.CANCELLED)
+        {
+            // Huỷ đơn: hoàn lại tồn kho đã trừ lúc đặt
+            foreach (var item in order.Items)
+            {
+                if (products.TryGetValue(item.ProductId, out var product))
+                {
+                    product.Stock += item.Quantity;
+                }
+            }
+        }
+
+        order.Status = newStatus;
+        order.UpdatedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync(ct);
 
         return order.ToDto();
     }

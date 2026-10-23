@@ -117,7 +117,7 @@ if ($prodJson) {
     $obj = $prodJson | ConvertFrom-Json
     $script:ProductList = $obj.data
     Write-Result -Name "  -> có meta phân trang" -Ok ($null -ne $obj.meta -and $obj.meta.totalPages -ge 1)
-    Write-Result -Name "  -> có 8 sản phẩm" -Ok ($obj.meta.total -eq 8) -Detail ("nhận " + $obj.meta.total)
+    Write-Result -Name "  -> có ít nhất 8 sản phẩm seed" -Ok ($obj.meta.total -ge 8) -Detail ("nhận " + $obj.meta.total)
 }
 
 Invoke-ApiTest -Name "GET /api/products?category=banh" -Method GET -Path "/api/products?category=banh" -Expected 200 | Out-Null

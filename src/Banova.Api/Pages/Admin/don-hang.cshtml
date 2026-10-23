@@ -1,0 +1,123 @@
+@page
+@model Banova.Api.Pages.Admin.OrdersModel
+@{
+    ViewData["Title"] = "Quản lý đơn hàng";
+}
+
+<h1>Đơn hàng</h1>
+<p class="page-sub">Đổi trạng thái đơn để khách thấy cập nhật. Huỷ đơn sẽ hoàn lại tồn kho.</p>
+
+@if (TempData["Message"] is string message)
+{
+    <div class="alert alert-ok">@message</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-error">@error</div>
+}
+
+<div class="panel">
+    <form method="get" style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px">
+        <div class="field" style="margin:0;min-width:180px">
+            <label for="status">Trạng thái</label>
+            <select id="status" name="status">
+                <option value="">Tất cả</option>
+                @foreach (var statusValue in Enum.GetValues<OrderStatus>())
+                {
+                    <option value="@statusValue" selected="@(Model.Status == statusValue.ToString())">
+                        @Constants.OrderStatusLabel(statusValue)
+                    </option>
+                }
+            </select>
+        </div>
+        <div class="field" style="margin:0;min-width:220px">
+            <label for="q">Tìm kiếm</label>
+            <input id="q" name="q" value="@Model.Q" placeholder="Mã đơn / tên / SĐT" />
+        </div>
+        <button type="submit" class="btn btn-outline">Lọc</button>
+        <a class="btn btn-outline" asp-page="/Admin/don-hang">Xoá lọc</a>
+        <span class="muted" style="margin-left:auto">Tổng: <strong>@Model.Total</strong> đơn</span>
+    </form>
+
+    @if (Model.Orders.Count == 0)
+    {
+        <p class="muted">Không có đơn hàng phù hợp.</p>
+    }
+    else
+    {
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mã đơn</th>
+                        <th>Khách hàng</th>
+                        <th>Tiền</th>
+                        <th>Trạng thái</th>
+                        <th>Đổi trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var order in Model.Orders)
+                {
+                    <tr>
+                        <td>
+                            <strong class="mono">@order.OrderCode</strong>
+                            <div class="muted">@order.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</div>
+                            <div class="muted">@order.PaymentMethod</div>
+                        </td>
+                        <td>
+                            <strong>@order.CustomerName</strong>
+                            <div class="muted">@order.Phone</div>
+                            <div class="muted">@order.Address</div>
+                            @if (!string.IsNullOrWhiteSpace(order.Note))
+                            {
+                                <div class="muted">Ghi chú: @order.Note</div>
+                            }
+                            <details>
+                                <summary>@order.Items.Count sản phẩm</summary>
+                                <ul style="margin:6px 0 0;padding-left:18px">
+                                    @foreach (var item in order.Items)
+                                    {
+                                        <li>@item.ProductName × @item.Quantity — @item.SubTotal.ToString("N0")₫</li>
+                                    }
+                                </ul>
+                            </details>
+                        </td>
+                        <td>
+                            <strong>@order.TotalAmount.ToString("N0")₫</strong>
+                            <div class="muted">Ship: @order.ShippingFee.ToString("N0")₫</div>
+                        </td>
+                        <td>
+                            @{
+                                var badgeClass = order.Status switch
+                                {
+                                    OrderStatus.PENDING => "badge-warn",
+                                    OrderStatus.CANCELLED => "badge-danger",
+                                    OrderStatus.COMPLETED => "badge-ok",
+                                    _ => "badge"
+                                };
+                            }
+                            <span class="badge @badgeClass">@order.StatusLabel</span>
+                        </td>
+                        <td>
+                            <form method="post" asp-page-handler="Status" asp-route-id="@order.Id">
+                                <input type="hidden" name="Status" value="@Model.Status" />
+                                <input type="hidden" name="Q" value="@Model.Q" />
+                                <select name="status" style="min-width:150px">
+                                    @foreach (var statusValue in Enum.GetValues<OrderStatus>())
+                                    {
+                                        <option value="@statusValue" selected="@(order.Status == statusValue)">
+                                            @Constants.OrderStatusLabel(statusValue)
+                                        </option>
+                                    }
+                                </select>
+                                <button type="submit" class="btn btn-sm" style="margin-top:6px">Lưu</button>
+                            </form>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

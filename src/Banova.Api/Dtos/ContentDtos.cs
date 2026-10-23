@@ -26,4 +26,7 @@ public sealed class ArticleQuery
     public int PageSize { get; set; } = Constants.DefaultPageSize;
     public string? Type { get; set; }
     public string? Q { get; set; }
+
+    /// <summary>Chỉ dùng cho admin (DRAFT | PUBLISHED) — danh sách công khai luôn lọc PUBLISHED.</summary>
+    public string? Status { get; set; }
 }

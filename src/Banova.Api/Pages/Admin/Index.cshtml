@@ -1,0 +1,90 @@
+@page
+@model Banova.Api.Pages.Admin.IndexModel
+@{
+    ViewData["Title"] = "Tổng quan";
+}
+
+<h1>Tổng quan</h1>
+<p class="page-sub">Số liệu cập nhật trực tiếp từ database tại thời điểm mở trang.</p>
+
+<div class="cards">
+    <div class="card">
+        <div class="card-label">Tổng đơn hàng</div>
+        <div class="card-value">@Model.Stats.TotalOrders</div>
+    </div>
+    <div class="card">
+        <div class="card-label">Đơn chờ xử lý</div>
+        <div class="card-value">@Model.Stats.PendingOrders</div>
+    </div>
+    <div class="card">
+        <div class="card-label">Đơn hoàn thành</div>
+        <div class="card-value">@Model.Stats.CompletedOrders</div>
+    </div>
+    <div class="card">
+        <div class="card-label">Doanh thu (trừ đơn huỷ)</div>
+        <div class="card-value">@Model.Stats.TotalRevenue.ToString("N0")₫</div>
+    </div>
+    <div class="card">
+        <div class="card-label">Sản phẩm</div>
+        <div class="card-value">@Model.Stats.TotalProducts</div>
+    </div>
+    <div class="card">
+        <div class="card-label">Bài viết</div>
+        <div class="card-value">@Model.Stats.TotalArticles</div>
+    </div>
+    <div class="card">
+        <div class="card-label">Đăng ký nhận tin</div>
+        <div class="card-value">@Model.Stats.TotalSubscribers</div>
+    </div>
+    <div class="card">
+        <div class="card-label">Tin nhắn liên hệ</div>
+        <div class="card-value">@Model.Stats.TotalContacts</div>
+    </div>
+</div>
+
+<div class="panel">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px">
+        <h2 style="margin:0">Đơn hàng mới nhất</h2>
+        <a class="btn btn-outline btn-sm" asp-page="/Admin/don-hang">Xem tất cả</a>
+    </div>
+
+    @if (Model.RecentOrders.Count == 0)
+    {
+        <p class="muted">Chưa có đơn hàng nào.</p>
+    }
+    else
+    {
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Mã đơn</th>
+                        <th>Khách hàng</th>
+                        <th>Tổng tiền</th>
+                        <th>Trạng thái</th>
+                        <th>Thời gian</th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach (var order in Model.RecentOrders)
+                {
+                    <tr>
+                        <td class="mono"><strong>@order.OrderCode</strong></td>
+                        <td>
+                            @order.CustomerName
+                            <div class="muted">@order.Phone</div>
+                        </td>
+                        <td>@order.TotalAmount.ToString("N0")₫</td>
+                        <td>
+                            <span class="badge @(order.Status == OrderStatus.PENDING ? "badge-warn" : order.Status == OrderStatus.CANCELLED ? "badge-danger" : "badge-ok")">
+                                @order.StatusLabel
+                            </span>
+                        </td>
+                        <td class="muted">@order.CreatedAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

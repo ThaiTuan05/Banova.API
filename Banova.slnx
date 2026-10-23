@@ -2,4 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/Banova.Api/Banova.Api.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Banova.Api.Tests/Banova.Api.Tests.csproj" />
+  </Folder>
 </Solution>

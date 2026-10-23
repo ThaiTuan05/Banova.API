@@ -2,7 +2,7 @@
 
 > **Người thực hiện:** BE (bạn)
 > **Phạm vi sở hữu:** toàn bộ repo `Banova.Api` — database, API, xác thực, đơn hàng, trang quản trị
-> **Cập nhật lần cuối:** 19/10/2026
+> **Cập nhật lần cuối:** 21/10/2026
 > **Mốc demo:** Thứ 4, 21/10/2026
 
 ---
@@ -55,7 +55,7 @@
 [CN 18/10]  API quiz/contact/newsletter + ha tang chung            ✅
    │
 [T2 19/10]  API dat hang (POST/GET) phuc vu CheckoutPage            ✅
-   │        Auth + Admin API                                       ⬜ hoan (FE chua co admin)
+   │        Auth + Admin API + 5 trang Razor                        ✅ (21/10)
    │
 [T3 20/10]  Deploy + ghep API voi FE + ra soat phap ly             ⬅ DANG O DAY
    │
@@ -102,29 +102,32 @@
 - [x] Controllers: `Products`, `Categories`, `Articles`, `Quiz`, `Marketing`
 - [x] **Đã test thật 14 ca** (xem mục 6)
 
-### GIAI ĐOẠN 2 — AUTH + ADMIN API ⬜ HOÃN (FE chưa có trang admin)
+### GIAI ĐOẠN 2 — AUTH + ADMIN API ✅ XONG (21/10)
 
-> **Quyết định phạm vi:** chỉ làm BE phục vụ những trang FE **đã hoàn thành**.
-> FE hiện có 7 trang (Trang chủ · Sản phẩm · Chi tiết SP · Quiz · Giỏ/Đặt hàng · Khoa học · Chi tiết bài viết)
-> và **chưa có trang Admin** → toàn bộ GĐ2 và 2 endpoint đơn hàng dành cho admin tạm hoãn.
-> Khi FE làm trang admin thì mở lại phần này.
+> **Phạm vi:** mở lại toàn bộ phần admin đã hoãn ở đợt 19/10, phục vụ trang quản trị Razor.
+> API công khai phục vụ FE giữ nguyên, không thay đổi shape.
 
-- [ ] **`JwtTokenService`** — ký/kiểm tra JWT bằng `Microsoft.IdentityModel.Tokens`, đọc `Jwt:Secret` từ config
-- [ ] Cấu hình `AddAuthentication().AddJwtBearer()` — **đọc token từ cookie `banova_token`** (không chỉ header)
-- [ ] `POST /api/auth/login` — BCrypt verify → set cookie `banova_token` (httpOnly, sameSite=lax) → trả thông tin admin
-  - [ ] `401 UNAUTHORIZED` khi sai tài khoản/mật khẩu
-- [ ] `POST /api/auth/logout` — xoá cookie
-- [ ] `GET /api/auth/me` 🔒 — `401` nếu chưa đăng nhập
-- [ ] Helper **`requireAdmin()`** — dùng `[Authorize(Roles = "ADMIN")]`
-- [ ] **`AdminProductsController`** 🔒
-  - [ ] `POST /api/admin/products` → `201`
-  - [ ] `PUT /api/admin/products/{id}`
-  - [ ] `DELETE /api/admin/products/{id}` → **soft delete** (chỉ set `deletedAt`)
-- [ ] **`AdminArticlesController`** 🔒
-  - [ ] `POST /api/admin/articles` — nếu `status = PUBLISHED` → tự set `publishedAt = now`
-  - [ ] `PUT /api/admin/articles/{id}`
-  - [ ] `DELETE /api/admin/articles/{id}`
-- [ ] `AdminStatsController` 🔒 — `GET /api/admin/stats` *(Should)*
+- [x] **`JwtTokenService`** — ký/kiểm tra JWT bằng `Microsoft.IdentityModel.Tokens`, đọc `Jwt:Secret` từ config
+- [x] Cấu hình `AddAuthentication().AddJwtBearer()` — **đọc token từ cookie `banova_token`** (và cả header `Authorization`)
+- [x] `POST /api/auth/login` — BCrypt verify → set cookie `banova_token` (httpOnly, sameSite=lax) → trả thông tin admin
+  - [x] `401 UNAUTHORIZED` khi sai tài khoản/mật khẩu (cùng một message để không lộ email tồn tại)
+  - [x] Rate limit 10 request/phút/IP chống brute-force
+- [x] `POST /api/auth/logout` — xoá cookie
+- [x] `GET /api/auth/me` 🔒 — `401` nếu chưa đăng nhập
+- [x] `[Authorize(Roles = "ADMIN")]` cho toàn bộ controller admin
+- [x] **`AdminProductsController`** 🔒
+  - [x] `GET /api/admin/products` *(bổ sung)* — danh sách gồm cả sản phẩm tạm ẩn
+  - [x] `POST /api/admin/products` → `201`; slug trùng → `409 CONFLICT`
+  - [x] `PUT /api/admin/products/{id}` — partial update
+  - [x] `DELETE /api/admin/products/{id}` → **soft delete** (chỉ set `deletedAt`)
+- [x] **`AdminArticlesController`** 🔒
+  - [x] `GET /api/admin/articles` *(bổ sung)* — gồm cả bản nháp
+  - [x] `POST /api/admin/articles` — nếu `status = PUBLISHED` → tự set `publishedAt = now`; SCIENCE thiếu `references` → `400`
+  - [x] `PUT /api/admin/articles/{id}`
+  - [x] `DELETE /api/admin/articles/{id}` → soft delete
+- [x] `AdminStatsController` 🔒 — `GET /api/admin/stats` (8 chỉ số, gồm doanh thu trừ đơn huỷ)
+- [x] `GET /api/orders` 🔒 — lọc `status`, tìm `q`, phân trang
+- [x] `PATCH /api/orders/{id}/status` 🔒 — huỷ đơn **hoàn tồn kho**, mở lại đơn đã huỷ thì kiểm tra + trừ kho lại
 
 ### GIAI ĐOẠN 3 — ĐẶT HÀNG MÔ PHỎNG (19/10) ★ TRỌNG ĐIỂM ✅ XONG PHẦN FE CẦN
 
@@ -141,35 +144,37 @@
 - [x] `POST /api/orders` — Public (Guest checkout) → `201` trả đầy đủ đơn + `items`
 - [x] `GET /api/orders/{orderCode}` — Public theo mã đơn → `404` nếu sai
 - [x] Thêm `statusLabel` (nhãn tiếng Việt) vào response cho FE hiển thị trực tiếp
-- [ ] `GET /api/orders` 🔒 — **hoãn**: FE chưa có trang admin
-- [ ] `PATCH /api/orders/{id}/status` 🔒 — **hoãn**: FE chưa có trang admin
+- [x] `GET /api/orders` 🔒 — danh sách, lọc `status`, tìm `q`, phân trang (21/10)
+- [x] `PATCH /api/orders/{id}/status` 🔒 — đổi trạng thái + hoàn/trừ tồn kho tương ứng (21/10)
 
-### GIAI ĐOẠN 4 — TRANG QUẢN TRỊ (Razor Pages) ⬜ HOÃN (FE chưa có trang admin)
+### GIAI ĐOẠN 4 — TRANG QUẢN TRỊ (Razor Pages) ✅ XONG (21/10)
 
-- [ ] `/Admin/dang-nhap` — form đăng nhập, lưu cookie
-- [ ] Guard: mọi trang `/Admin/*` phải đăng nhập (Razor Pages convention + `[Authorize]`)
-- [ ] `/Admin` — Dashboard 4 chỉ số: tổng đơn · đơn chờ xử lý · số sản phẩm · số bài viết · số đăng ký nhận tin
-- [ ] `/Admin/san-pham` — danh sách (ảnh, giá, tồn kho, trạng thái) + form thêm/sửa đầy đủ `rsContent, rsType, gi, fiber, ingredients, usage`
-- [ ] `/Admin/bai-viet` — danh sách + form viết bài + nút **DRAFT / PUBLISH** + ô `references`
-- [ ] `/Admin/don-hang` — danh sách đơn + lọc trạng thái + xem chi tiết + **đổi trạng thái**
+- [x] `/Admin/dang-nhap` — form đăng nhập, lưu cookie
+- [x] Guard: `AuthorizeFolder("/Admin")` + cho phép anonymous ở trang đăng nhập; chưa login → redirect kèm `returnUrl`
+- [x] `/Admin` — Dashboard: tổng đơn · chờ xử lý · hoàn thành · doanh thu · sản phẩm · bài viết · đăng ký nhận tin · liên hệ + 6 đơn mới nhất
+- [x] `/Admin/san-pham` — danh sách (giá, tồn kho, trạng thái, tìm kiếm) + form thêm/sửa đầy đủ `rsContent, rsType, gi, fiber, ingredients, usage` + xoá mềm
+- [x] `/Admin/bai-viet` — danh sách + form viết bài + **DRAFT / PUBLISHED** + ô `references` + xoá mềm
+- [x] `/Admin/don-hang` — danh sách + lọc trạng thái + tìm mã đơn/tên/SĐT + xem chi tiết món + **đổi trạng thái**
 
 ### GIAI ĐOẠN 5 — TÍCH HỢP FE + DEPLOY (20/10) ⬜ CÒN LẠI
 
-- [ ] Bàn giao FE: `VITE_API_BASE_URL`, link Scalar, bảng map field (xem mục 5)
+- [x] Bàn giao FE: `VITE_API_BASE_URL`, link Scalar, bảng map field (xem mục 5)
 - [ ] Chạy đủ **6 kịch bản demo** cùng Người 1
 - [ ] **Deploy** (⚠️ **Vercel KHÔNG chạy được .NET**):
+  - [x] Chuẩn bị artifact: `Dockerfile`, `web.config`, `appsettings.Production.json`, `.env.example`, `/health`
   - [ ] Chọn host: Azure App Service F1 (free) / MonsterASP.NET (free) / Render (Docker)
   - [ ] SQL Server cloud (hoặc LocalDB nếu demo tại máy)
-  - [ ] Đổi `Jwt:Secret` + `ConnectionStrings` bằng **biến môi trường**, không commit
-  - [ ] Cập nhật `Cors:AllowedOrigins` = domain FE thật
-- [ ] Warm-up host trước demo (nếu plan free có spin-down)
+  - [x] Đổi `Jwt:Secret` + `ConnectionStrings` bằng **biến môi trường** — app từ chối khởi động nếu Production còn `REPLACE_ME`
+  - [ ] Cập nhật `Cors:AllowedOrigins` = domain FE thật (đã bật `AllowCredentials` cho cookie admin)
+- [ ] Warm-up host trước demo (gọi `/health` nếu plan free có spin-down)
 
 ### GIAI ĐOẠN 6 — RÀ SOÁT PHÁP LÝ & REHEARSE (21/10) ⬜ CÒN LẠI
 
 - [ ] Quét toàn bộ dữ liệu seed + nội dung: không còn *"chữa"*, *"điều trị"*, *"thay thuốc"*, *"đặc trị"*
-- [ ] Mọi bài `SCIENCE` bắt buộc có `references` (NFR-03/NFR-09)
-- [ ] `dotnet build` phải **0 warning, 0 error**
-- [ ] Không lộ secret ra log/response
+- [x] Mọi bài `SCIENCE` bắt buộc có `references` (NFR-03/NFR-09) — đã validate trong `ArticleService`
+- [x] `dotnet build` phải **0 warning, 0 error**
+- [x] `dotnet test` **31/31 pass**
+- [x] Không lộ secret ra log/response
 - [ ] Code freeze — chỉ sửa lỗi nhỏ, không thêm tính năng
 
 ---
@@ -188,21 +193,22 @@
 | 8 | POST | `/api/newsletter` | Public | ✅ Xong |
 | 9 | POST | `/api/orders` | Public | ✅ Xong |
 | 10 | GET | `/api/orders/{orderCode}` | Public | ✅ Xong |
-| 11 | POST | `/api/auth/login` | Public | ⬜ Hoãn |
-| 12 | POST | `/api/auth/logout` | Admin | ⬜ Hoãn |
-| 13 | GET | `/api/auth/me` | Admin | ⬜ Hoãn |
-| 14 | POST | `/api/admin/products` | Admin | ⬜ Hoãn |
-| 15 | PUT | `/api/admin/products/{id}` | Admin | ⬜ Hoãn |
-| 16 | DELETE | `/api/admin/products/{id}` | Admin | ⬜ Hoãn |
-| 17 | POST | `/api/admin/articles` | Admin | ⬜ Hoãn |
-| 18 | PUT | `/api/admin/articles/{id}` | Admin | ⬜ Hoãn |
-| 19 | DELETE | `/api/admin/articles/{id}` | Admin | ⬜ Hoãn |
-| 20 | GET | `/api/orders` | Admin | ⬜ Hoãn |
-| 21 | PATCH | `/api/orders/{id}/status` | Admin | ⬜ Hoãn |
-| 22 | GET | `/api/admin/stats` | Admin | ⬜ Hoãn |
+| 11 | POST | `/api/auth/login` | Public | ✅ Xong |
+| 12 | POST | `/api/auth/logout` | Admin | ✅ Xong |
+| 13 | GET | `/api/auth/me` | Admin | ✅ Xong |
+| 14 | POST | `/api/admin/products` | Admin | ✅ Xong |
+| 15 | PUT | `/api/admin/products/{id}` | Admin | ✅ Xong |
+| 16 | DELETE | `/api/admin/products/{id}` | Admin | ✅ Xong |
+| 17 | POST | `/api/admin/articles` | Admin | ✅ Xong |
+| 18 | PUT | `/api/admin/articles/{id}` | Admin | ✅ Xong |
+| 19 | DELETE | `/api/admin/articles/{id}` | Admin | ✅ Xong |
+| 20 | GET | `/api/orders` | Admin | ✅ Xong |
+| 21 | PATCH | `/api/orders/{id}/status` | Admin | ✅ Xong |
+| 22 | GET | `/api/admin/stats` | Admin | ✅ Xong |
 
-> **Trạng thái: 10/10 endpoint phục vụ FE hiện tại đã xong** (1–10). 12 endpoint còn lại đều thuộc khu vực admin — **hoãn vì FE chưa có trang admin**.
-> Việc duy nhất còn lại của BE để demo là **deploy** + **phối hợp ghép API với Người 1**.
+> **Trạng thái: 22/22 endpoint theo `API.md` đã xong** (1–22), kèm 2 endpoint bổ sung cho trang admin
+> (`GET /api/admin/products`, `GET /api/admin/articles`) và `GET /health` cho deploy.
+> Kiểm thử: `dotnet test` **31/31 pass** · `scripts/smoke-test.ps1` **35/35 pass** · `scripts/smoke-admin.ps1` **50/50 pass**.
 
 ---
 

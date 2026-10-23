@@ -1,0 +1,41 @@
+@page
+@model Banova.Api.Pages.Admin.LoginModel
+@{
+    ViewData["Title"] = "Đăng nhập quản trị";
+}
+
+<div class="auth-card">
+    <div class="brand" style="padding:0;margin-bottom:18px">
+        <div class="brand-mark">B</div>
+        <div>
+            <div class="brand-text" style="color:var(--primary)">Banova</div>
+            <div class="brand-sub" style="color:var(--muted)">Quản trị</div>
+        </div>
+    </div>
+
+    <h1>Đăng nhập</h1>
+    <p class="page-sub">Quản lý sản phẩm, bài viết và đơn hàng.</p>
+
+    @if (!string.IsNullOrWhiteSpace(Model.ErrorMessage))
+    {
+        <div class="alert alert-error">@Model.ErrorMessage</div>
+    }
+
+    <form method="post">
+        <input type="hidden" asp-for="ReturnUrl" />
+
+        <div class="field">
+            <label asp-for="Email">Email</label>
+            <input asp-for="Email" type="email" autocomplete="username" required autofocus />
+        </div>
+
+        <div class="field">
+            <label asp-for="Password">Mật khẩu</label>
+            <input asp-for="Password" type="password" autocomplete="current-password" required />
+        </div>
+
+        <button type="submit" class="btn" style="width:100%;justify-content:center">Đăng nhập</button>
+    </form>
+
+    <p class="auth-note">Tài khoản demo: admin@@banova.vn · Banova@@123</p>
+</div>

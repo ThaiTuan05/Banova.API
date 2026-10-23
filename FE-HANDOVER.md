@@ -295,3 +295,23 @@ Nếu gặp lỗi `blocked by CORS policy` → gửi BE domain FE đang chạy �
 | Cần thêm endpoint mới | BE — nhưng phải bổ sung vào `API.md` trước |
 | CORS lỗi | BE — thêm origin |
 | Lỗi hiển thị / UI | FE |
+
+---
+
+## 9. CẬP NHẬT 21/10 — ADMIN API ĐÃ SẴN SÀNG
+
+Toàn bộ phần admin trước đây hoãn **đã xong** (22/22 endpoint theo `API.md`):
+
+- `POST /api/auth/login` · `POST /api/auth/logout` · `GET /api/auth/me` (cookie `banova_token`)
+- `POST/PUT/DELETE /api/admin/products` (+ `GET /api/admin/products` bổ sung cho danh sách)
+- `POST/PUT/DELETE /api/admin/articles` (+ `GET /api/admin/articles`)
+- `GET /api/orders` · `PATCH /api/orders/{id}/status` · `GET /api/admin/stats`
+
+**FE không cần làm trang admin nữa**: BE đã có 5 trang Razor chạy sẵn tại `/Admin`
+(đăng nhập · dashboard · sản phẩm · bài viết · đơn hàng). Tài khoản demo `admin@banova.vn` / `Banova@123`.
+
+Nếu sau này FE muốn tự làm admin SPA thì dùng các endpoint trên; nhớ `fetch` kèm
+`credentials: 'include'` để gửi cookie và bật CORS origin tương ứng ở BE.
+
+Các việc P0 còn lại **vẫn thuộc FE** (xem mục 1–5): nối API đúng field, sửa form liên hệ,
+bỏ id mock, render `content` bài viết. BE không thay đổi shape của 10 endpoint công khai.

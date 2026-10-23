@@ -1,0 +1,203 @@
+@page
+@model Banova.Api.Pages.Admin.ProductsModel
+@{
+    ViewData["Title"] = "Quản lý sản phẩm";
+    var isEdit = Model.Id is not null;
+}
+
+<h1>Sản phẩm</h1>
+<p class="page-sub">Thêm, sửa và xoá mềm sản phẩm. Xoá mềm giữ nguyên dữ liệu trong đơn hàng cũ.</p>
+
+@if (TempData["Message"] is string message)
+{
+    <div class="alert alert-ok">@message</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-error">@error</div>
+}
+
+<div class="grid-2">
+    <div class="panel">
+        <h2>@(isEdit ? "Sửa sản phẩm" : "Thêm sản phẩm")</h2>
+
+        <form method="post" asp-page-handler="Save">
+            <input type="hidden" asp-for="Id" />
+
+            <div class="grid-2" style="gap:0 12px">
+                <div class="field">
+                    <label asp-for="Input.Name">Tên sản phẩm *</label>
+                    <input asp-for="Input.Name" required />
+                </div>
+                <div class="field">
+                    <label asp-for="Input.Slug">Slug * (bỏ trống sẽ lỗi nếu thêm mới)</label>
+                    <input asp-for="Input.Slug" placeholder="bot-chuoi-xanh-500g" />
+                </div>
+            </div>
+
+            <div class="grid-2" style="gap:0 12px">
+                <div class="field">
+                    <label asp-for="Input.CategoryId">Danh mục *</label>
+                    <select asp-for="Input.CategoryId" required>
+                        <option value="">— Chọn danh mục —</option>
+                        @foreach (var category in Model.Categories)
+                        {
+                            <option value="@category.Id">@category.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="field">
+                    <label asp-for="Input.Price">Giá (VND) *</label>
+                    <input asp-for="Input.Price" type="number" min="1" step="1" inputmode="numeric" required />
+                </div>
+            </div>
+
+            <div class="grid-2" style="gap:0 12px">
+                <div class="field">
+                    <label asp-for="Input.Unit">Đơn vị *</label>
+                    <input asp-for="Input.Unit" placeholder="hũ / gói / hộp" required />
+                </div>
+                <div class="field">
+                    <label asp-for="Input.ServingSize">Khẩu phần *</label>
+                    <input asp-for="Input.ServingSize" placeholder="15g" required />
+                </div>
+            </div>
+
+            <div class="grid-2" style="gap:0 12px">
+                <div class="field">
+                    <label asp-for="Input.RsContent">RS (g/khẩu phần) *</label>
+                    <input asp-for="Input.RsContent" type="number" min="0" step="any" required />
+                </div>
+                <div class="field">
+                    <label asp-for="Input.RsType">Loại RS *</label>
+                    <select asp-for="Input.RsType">
+                        <option value="RS2">RS2</option>
+                        <option value="RS3">RS3</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid-2" style="gap:0 12px">
+                <div class="field">
+                    <label asp-for="Input.Gi">Chỉ số GI</label>
+                    <input asp-for="Input.Gi" type="number" min="0" />
+                </div>
+                <div class="field">
+                    <label asp-for="Input.Fiber">Chất xơ (g)</label>
+                    <input asp-for="Input.Fiber" type="number" min="0" step="any" />
+                </div>
+            </div>
+
+            <div class="grid-2" style="gap:0 12px">
+                <div class="field">
+                    <label asp-for="Input.Stock">Tồn kho *</label>
+                    <input asp-for="Input.Stock" type="number" min="0" required />
+                </div>
+                <div class="field">
+                    <label asp-for="Input.IsActive">Trạng thái bán</label>
+                    <select asp-for="Input.IsActive">
+                        <option value="true">Đang bán</option>
+                        <option value="false">Tạm ẩn</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="field">
+                <label asp-for="Input.ImageUrl">URL ảnh</label>
+                <input asp-for="Input.ImageUrl" placeholder="https://..." />
+            </div>
+
+            <div class="field">
+                <label asp-for="Input.ShortDescription">Mô tả ngắn</label>
+                <input asp-for="Input.ShortDescription" />
+            </div>
+
+            <div class="field">
+                <label asp-for="Input.Description">Mô tả đầy đủ *</label>
+                <textarea asp-for="Input.Description" rows="3" required></textarea>
+            </div>
+
+            <div class="field">
+                <label asp-for="Input.Ingredients">Thành phần</label>
+                <textarea asp-for="Input.Ingredients" rows="2"></textarea>
+            </div>
+
+            <div class="field">
+                <label asp-for="Input.Usage">Hướng dẫn sử dụng</label>
+                <textarea asp-for="Input.Usage" rows="2"></textarea>
+            </div>
+
+            <div class="row-actions">
+                <button type="submit" class="btn">@(isEdit ? "Lưu thay đổi" : "Thêm sản phẩm")</button>
+                @if (isEdit)
+                {
+                    <a class="btn btn-outline" asp-page="/Admin/san-pham">Huỷ sửa</a>
+                }
+            </div>
+        </form>
+    </div>
+
+    <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px">
+            <h2 style="margin:0">Danh sách (@Model.Products.Count)</h2>
+            <form method="get" style="display:flex;gap:6px">
+                <input name="q" value="@Model.Q" placeholder="Tìm theo tên..." />
+                <button type="submit" class="btn btn-outline btn-sm">Tìm</button>
+            </form>
+        </div>
+
+        @if (Model.Products.Count == 0)
+        {
+            <p class="muted">Không có sản phẩm nào.</p>
+        }
+        else
+        {
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Sản phẩm</th>
+                            <th>Giá</th>
+                            <th>Kho</th>
+                            <th>Trạng thái</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var product in Model.Products)
+                    {
+                        <tr>
+                            <td>
+                                <strong>@product.Name</strong>
+                                <div class="muted mono">@product.Slug</div>
+                                <div class="muted">@product.Category.Name</div>
+                            </td>
+                            <td>@product.Price.ToString("N0")₫</td>
+                            <td>@product.Stock</td>
+                            <td>
+                                @if (product.IsActive)
+                                {
+                                    <span class="badge badge-ok">Đang bán</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-warn">Tạm ẩn</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="row-actions">
+                                    <a class="btn btn-outline btn-sm" asp-page="/Admin/san-pham" asp-route-id="@product.Id">Sửa</a>
+                                    <form method="post" asp-page-handler="Delete" asp-route-id="@product.Id"
+                                          onsubmit="return confirm('Xoá mềm sản phẩm này?');">
+                                        <button type="submit" class="btn btn-danger btn-sm">Xoá</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

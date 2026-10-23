@@ -5,6 +5,9 @@ namespace Banova.Api.Lib;
 /// <summary>Các hằng số + nhãn tiếng Việt dùng chung. Muốn sửa phải báo cả nhóm (mục 12.3).</summary>
 public static class Constants
 {
+    /// <summary>Tên cookie chứa JWT của admin (httpOnly) — API.md mục 6.1.</summary>
+    public const string AuthCookieName = "banova_token";
+
     /// <summary>pageSize mặc định theo API.md mục 0.4.</summary>
     public const int DefaultPageSize = 12;
 

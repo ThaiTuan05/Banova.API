@@ -1,0 +1,157 @@
+@page
+@model Banova.Api.Pages.Admin.ArticlesModel
+@{
+    ViewData["Title"] = "Quản lý bài viết";
+    var isEdit = Model.Id is not null;
+}
+
+<h1>Bài viết</h1>
+<p class="page-sub">Soạn bài khoa học / blog và xuất bản. Bài SCIENCE bắt buộc có nguồn trích dẫn.</p>
+
+@if (TempData["Message"] is string message)
+{
+    <div class="alert alert-ok">@message</div>
+}
+@if (TempData["Error"] is string error)
+{
+    <div class="alert alert-error">@error</div>
+}
+
+<div class="grid-2">
+    <div class="panel">
+        <h2>@(isEdit ? "Sửa bài viết" : "Bài viết mới")</h2>
+
+        <form method="post" asp-page-handler="Save">
+            <input type="hidden" asp-for="Id" />
+
+            <div class="field">
+                <label asp-for="Input.Title">Tiêu đề *</label>
+                <input asp-for="Input.Title" required />
+            </div>
+
+            <div class="field">
+                <label asp-for="Input.Slug">Slug *</label>
+                <input asp-for="Input.Slug" placeholder="tinh-bot-khang-la-gi" />
+            </div>
+
+            <div class="grid-2" style="gap:0 12px">
+                <div class="field">
+                    <label asp-for="Input.Type">Loại bài *</label>
+                    <select asp-for="Input.Type">
+                        <option value="SCIENCE">Khoa học (SCIENCE)</option>
+                        <option value="BLOG">Lối sống (BLOG)</option>
+                    </select>
+                </div>
+                <div class="field">
+                    <label asp-for="Input.Status">Trạng thái *</label>
+                    <select asp-for="Input.Status">
+                        <option value="DRAFT">Bản nháp (DRAFT)</option>
+                        <option value="PUBLISHED">Xuất bản (PUBLISHED)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid-2" style="gap:0 12px">
+                <div class="field">
+                    <label asp-for="Input.Author">Tác giả</label>
+                    <input asp-for="Input.Author" />
+                </div>
+                <div class="field">
+                    <label asp-for="Input.Thumbnail">URL ảnh đại diện</label>
+                    <input asp-for="Input.Thumbnail" placeholder="https://..." />
+                </div>
+            </div>
+
+            <div class="field">
+                <label asp-for="Input.Excerpt">Tóm tắt</label>
+                <textarea asp-for="Input.Excerpt" rows="2"></textarea>
+            </div>
+
+            <div class="field">
+                <label asp-for="Input.Content">Nội dung * (HTML hoặc Markdown)</label>
+                <textarea asp-for="Input.Content" rows="10" required></textarea>
+            </div>
+
+            <div class="field">
+                <label asp-for="Input.References">Nguồn trích dẫn (bắt buộc với SCIENCE)</label>
+                <textarea asp-for="Input.References" rows="4"
+                          placeholder="1. Birt DF, et al. (2013). Advances in Nutrition..."></textarea>
+            </div>
+
+            <div class="row-actions">
+                <button type="submit" class="btn">@(isEdit ? "Lưu thay đổi" : "Tạo bài viết")</button>
+                @if (isEdit)
+                {
+                    <a class="btn btn-outline" asp-page="/Admin/bai-viet">Huỷ sửa</a>
+                }
+            </div>
+        </form>
+    </div>
+
+    <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px">
+            <h2 style="margin:0">Danh sách (@Model.Articles.Count)</h2>
+            <form method="get" style="display:flex;gap:6px">
+                <input name="q" value="@Model.Q" placeholder="Tìm theo tiêu đề..." />
+                <button type="submit" class="btn btn-outline btn-sm">Tìm</button>
+            </form>
+        </div>
+
+        @if (Model.Articles.Count == 0)
+        {
+            <p class="muted">Chưa có bài viết nào.</p>
+        }
+        else
+        {
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Bài viết</th>
+                            <th>Loại</th>
+                            <th>Trạng thái</th>
+                            <th>Xuất bản</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var article in Model.Articles)
+                    {
+                        <tr>
+                            <td>
+                                <strong>@article.Title</strong>
+                                <div class="muted mono">@article.Slug</div>
+                            </td>
+                            <td>
+                                <span class="badge">@article.Type</span>
+                            </td>
+                            <td>
+                                @if (article.Status == PublishState.PUBLISHED)
+                                {
+                                    <span class="badge badge-ok">Đã đăng</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-warn">Bản nháp</span>
+                                }
+                            </td>
+                            <td class="muted">
+                                @(article.PublishedAt?.ToLocalTime().ToString("dd/MM/yyyy HH:mm") ?? "—")
+                            </td>
+                            <td>
+                                <div class="row-actions">
+                                    <a class="btn btn-outline btn-sm" asp-page="/Admin/bai-viet" asp-route-id="@article.Id">Sửa</a>
+                                    <form method="post" asp-page-handler="Delete" asp-route-id="@article.Id"
+                                          onsubmit="return confirm('Xoá mềm bài viết này?');">
+                                        <button type="submit" class="btn btn-danger btn-sm">Xoá</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

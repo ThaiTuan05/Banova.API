@@ -1,0 +1,13 @@
+**/bin
+**/obj
+**/.vs
+**/.vscode
+**/TestResults
+**/*.user
+.git
+.gitignore
+README.md
+task.md
+FE-HANDOVER.md
+scripts
+tests

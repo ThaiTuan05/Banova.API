@@ -1,7 +1,9 @@
 using Banova.Api.Common;
 using Banova.Api.Dtos;
+using Banova.Api.Lib;
 using Banova.Api.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Banova.Api.Controllers;
 
@@ -20,6 +22,7 @@ public class MarketingController : ControllerBase
 
     /// <summary>POST /api/contact → 201 { data: { id } }</summary>
     [HttpPost("api/contact")]
+    [EnableRateLimiting(RateLimitPolicies.PublicWrite)]
     public async Task<IActionResult> Contact([FromBody] ContactRequest request, CancellationToken ct)
     {
         var id = await _contact.CreateAsync(request, ct);
@@ -28,6 +31,7 @@ public class MarketingController : ControllerBase
 
     /// <summary>POST /api/newsletter → 201 { data: { id, email } }, trùng email trả 409 CONFLICT</summary>
     [HttpPost("api/newsletter")]
+    [EnableRateLimiting(RateLimitPolicies.PublicWrite)]
     public async Task<IActionResult> Newsletter([FromBody] NewsletterRequest request, CancellationToken ct)
     {
         var id = await _newsletter.SubscribeAsync(request, ct);
